@@ -80,7 +80,7 @@ ym.modules.define('shri2017.imageViewer.GestureController', [
             var state = this._view.getState();
             this._scale(
                 event.targetPoint,
-                state.scale + WHEEL_STEP * event.delta
+                state.scale - WHEEL_STEP * event.delta
             );
         },
 
