@@ -9,7 +9,8 @@ ym.modules.define('shri2017.imageViewer.EventManager', [
         touchstart: 'start',
         touchmove: 'move',
         touchend: 'end',
-        touchcancel: 'end'
+        touchcancel: 'end',
+        wheel: 'wheel'
     };
 
     function EventManager(elem, callback) {
@@ -26,8 +27,10 @@ ym.modules.define('shri2017.imageViewer.EventManager', [
         _setupListeners: function () {
             this._mouseListener = this._mouseEventHandler.bind(this);
             this._touchListener = this._touchEventHandler.bind(this);
+            this._wheelListener = this._wheelEventHandler.bind(this);
             this._addEventListeners('mousedown', this._elem, this._mouseListener);
             this._addEventListeners('touchstart touchmove touchend touchcancel', this._elem, this._touchListener);
+            this._addEventListeners('wheel', this._elem, this._wheelListener);
         },
 
         _teardownListeners: function () {
@@ -101,6 +104,18 @@ ym.modules.define('shri2017.imageViewer.EventManager', [
                 type: EVENTS[event.type],
                 targetPoint: targetPoint,
                 distance: distance
+            });
+        },
+
+        _wheelEventHandler: function (event) {
+            var elemOffset = this._calculateElementOffset(this._elem);
+            this._callback({
+                type: EVENTS[event.type],
+                targetPoint: {
+                    x: event.clientX - elemOffset.x,
+                    y: event.clientY - elemOffset.y
+                },
+                delta: event.deltaY
             });
         },
 
