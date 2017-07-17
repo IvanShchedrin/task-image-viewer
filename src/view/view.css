@@ -1,8 +1,0 @@
-.image-viewer__view {
-    display: block;
-    background-color: #333;
-}
-
-.prevent-touch-actions {
-    touch-action: none;
-}
