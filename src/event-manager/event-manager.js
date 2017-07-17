@@ -33,6 +33,7 @@ ym.modules.define('shri2017.imageViewer.EventManager', [
             if (window.PointerEvent) {
                 this._pointerListener = this._pointerEventHandler.bind(this);
                 this._pointerMoveListener = this._pointerMoveEventHandler.bind(this);
+                this._pointerOutListener = this._pointerOutEventHandler.bind(this);
                 this._addEventListeners('pointerdown pointerup', this._elem, this._pointerListener);
                 this._elem.className += ' prevent-touch-actions';
             } else {
@@ -124,11 +125,11 @@ ym.modules.define('shri2017.imageViewer.EventManager', [
             var ids = Object.keys(this._pointers);
             var elemOffset = this._calculateElementOffset(this._elem);
 
-            if (ids.length > 2) {
-                return;
-            }
-
             if (event.type === 'pointerdown') {
+                if (ids.length > 1) {
+                    return;
+                }
+
                 if (ids.length === 0) {
                     this._addEventListeners('pointermove', this._elem, this._pointerMoveListener);
                     this._callback({
@@ -140,7 +141,12 @@ ym.modules.define('shri2017.imageViewer.EventManager', [
                         distance: 1
                     });
                     this._savePointer(event);
+
+                    if (event.pointerType === 'mouse') {
+                        this._addEventListeners('pointerout pointerover', this._elem, this._pointerOutListener);
+                    }
                 }
+
                 if (ids.length === 1) {
                     this._callback({
                         type: EVENTS[event.type],
@@ -152,6 +158,11 @@ ym.modules.define('shri2017.imageViewer.EventManager', [
             } else {
                 if (ids.length === 1) {
                     this._removeEventListeners('pointermove', this._elem, this._pointerMoveListener);
+
+                    if (event.pointerType === 'mouse') {
+                        this._removeEventListeners('pointerout pointerover', this._elem, this._pointerOutListener);
+                        this._removeEventListeners('pointerup', document, this._pointerListener);
+                    }
                 }
 
                 var lastEvent = event;
@@ -169,6 +180,7 @@ ym.modules.define('shri2017.imageViewer.EventManager', [
                     },
                     distance: 1
                 });
+
                 delete this._pointers[event.pointerId];
             }
         },
@@ -205,6 +217,17 @@ ym.modules.define('shri2017.imageViewer.EventManager', [
                     targetPoint: targetPoint,
                     distance: distance
                 });
+            }
+        },
+
+        _pointerOutEventHandler: function (event) {
+            if (event.type === 'pointerout') {
+                this._addEventListeners('pointermove', document, this._pointerMoveListener);
+                this._addEventListeners('pointerup', document, this._pointerOutListener);
+                this._addEventListeners('pointerup', document, this._pointerListener);
+            } else {
+                this._removeEventListeners('pointermove', document, this._pointerMoveListener);
+                this._removeEventListeners('pointerup', document, this._pointerOutListener);
             }
         },
 
