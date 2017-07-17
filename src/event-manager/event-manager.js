@@ -193,10 +193,12 @@ ym.modules.define('shri2017.imageViewer.EventManager', [
 
                 var ids = Object.keys(this._pointers);
                 var targetPoint;
+                var pointer;
                 var distance = 1;
                 var elemOffset = this._calculateElementOffset(this._elem);
 
                 if (ids.length === 1) {
+                    pointer = event.pointerType;
                     targetPoint = {
                         x: event.clientX,
                         y: event.clientY
@@ -215,7 +217,8 @@ ym.modules.define('shri2017.imageViewer.EventManager', [
                 this._callback({
                     type: EVENTS[event.type],
                     targetPoint: targetPoint,
-                    distance: distance
+                    distance: distance,
+                    pointer: pointer
                 });
             }
         },
@@ -232,6 +235,8 @@ ym.modules.define('shri2017.imageViewer.EventManager', [
         },
 
         _wheelEventHandler: function (event) {
+            event.preventDefault();
+
             var elemOffset = this._calculateElementOffset(this._elem);
             this._callback({
                 type: EVENTS[event.type],
