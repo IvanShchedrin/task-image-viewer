@@ -96,9 +96,11 @@ ym.modules.define('shri2017.imageViewer.EventManager', [
 
             var targetPoint;
             var distance = 1;
+            var pointerType;
             var elemOffset = this._calculateElementOffset(this._elem);
 
             if (touches.length === 1) {
+                pointerType = 'touch';
                 targetPoint = {
                     x: touches[0].clientX,
                     y: touches[0].clientY
@@ -115,7 +117,8 @@ ym.modules.define('shri2017.imageViewer.EventManager', [
             this._callback({
                 type: EVENTS[event.type],
                 targetPoint: targetPoint,
-                distance: distance
+                distance: distance,
+                pointer: pointerType
             });
         },
 
@@ -193,12 +196,12 @@ ym.modules.define('shri2017.imageViewer.EventManager', [
 
                 var ids = Object.keys(this._pointers);
                 var targetPoint;
-                var pointer;
+                var pointerType;
                 var distance = 1;
                 var elemOffset = this._calculateElementOffset(this._elem);
 
                 if (ids.length === 1) {
-                    pointer = event.pointerType;
+                    pointerType = event.pointerType;
                     targetPoint = {
                         x: event.clientX,
                         y: event.clientY
@@ -218,7 +221,7 @@ ym.modules.define('shri2017.imageViewer.EventManager', [
                     type: EVENTS[event.type],
                     targetPoint: targetPoint,
                     distance: distance,
-                    pointer: pointer
+                    pointer: pointerType
                 });
             }
         },
