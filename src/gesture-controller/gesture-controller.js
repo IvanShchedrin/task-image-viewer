@@ -21,31 +21,39 @@ ym.modules.define('shri2017.imageViewer.GestureController', [
             this._eventManager.destroy();
         },
 
+        // храним здесь id таймайта, чтобы прерывать его обработку
         _timeoutId: null,
+        // предыдущее состояние oneTouch-зума
         _oneTouchZoomPrev: null,
+        // начальное состояние oneTouch-зума для высчитывания точки приближения
         _oneTouchInitPoint: null,
 
         _eventHandler: function (event) {
             var state = this._view.getState();
 
-            // dblclick
             if (!this._lastEventTypes) {
+                // чистим предыдущий таймаут, чтобы не плодить и уметь управлять им
                 clearTimeout(this._timeoutId);
+
                 this._timeoutId = setTimeout(function () {
+                    // сбрасываем очередь событий
                     this._lastEventTypes = '';
                 }.bind(this), 500);
             }
             this._lastEventTypes += ' ' + event.type;
 
+            // вобрабатываем 2 варианта: дальше будет end - dblclick или (move + type == 'touch') - onetouchzoom
             if (this._lastEventTypes.indexOf('start end start') > -1) {
                 clearTimeout(this._timeoutId);
 
+                // dblclick
                 if (this._lastEventTypes.indexOf('start end start end') > -1) {
                     this._lastEventTypes = '';
                     this._processDbltap(event);
                     return;
                 }
 
+                // onetouchzoom
                 if (
                     this._oneTouchZoomPrev === null && event.pointer === 'touch' &&
                     this._lastEventTypes.indexOf('start end start move') > -1
@@ -62,6 +70,7 @@ ym.modules.define('shri2017.imageViewer.GestureController', [
                 this._oneTouchZoomPrev = null;
             }
 
+            // wheel
             if (event.type === 'wheel') {
                 this._processWheel(event);
                 return;

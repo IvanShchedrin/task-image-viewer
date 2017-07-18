@@ -27,9 +27,11 @@ ym.modules.define('shri2017.imageViewer.EventManager', [
             this._teardownListeners();
         },
 
+        // хеш поинтеров, максимум 2
         _pointers: {},
 
         _setupListeners: function () {
+            // если поддерживаются PointerEvents, то работаем с ними, иначе используем TouchEvents
             if (window.PointerEvent) {
                 this._pointerListener = this._pointerEventHandler.bind(this);
                 this._pointerMoveListener = this._pointerMoveEventHandler.bind(this);
@@ -42,14 +44,23 @@ ym.modules.define('shri2017.imageViewer.EventManager', [
                 this._addEventListeners('mousedown', this._elem, this._mouseListener);
                 this._addEventListeners('touchstart touchmove touchend touchcancel', this._elem, this._touchListener);
             }
+            // колесико мышки должно работать везде + тачпад
             this._wheelListener = this._wheelEventHandler.bind(this);
             this._addEventListeners('wheel', this._elem, this._wheelListener);
         },
 
+        // отписываемся от всех возможных обработчиков
         _teardownListeners: function () {
             this._removeEventListeners('mousedown', this._elem, this._mouseListener);
             this._removeEventListeners('mousemove mouseup', document.documentElement, this._mouseListener);
             this._removeEventListeners('touchstart touchmove touchend touchcancel', this._elem, this._touchListener);
+            this._removeEventListeners('pointerdown pointerup', this._elem, this._pointerListener);
+            this._removeEventListeners('wheel', this._elem, this._wheelListener);
+            this._removeEventListeners('pointermove', this._elem, this._pointerMoveListener);
+            this._removeEventListeners('pointerout pointerover', this._elem, this._pointerOutListener);
+            this._removeEventListeners('pointermove', document.documentElement, this._pointerMoveListener);
+            this._removeEventListeners('pointerup', document.documentElement, this._pointerOutListener);
+            this._removeEventListeners('pointerup', document.documentElement, this._pointerListener);
         },
 
         _addEventListeners: function (types, elem, callback) {
@@ -122,17 +133,21 @@ ym.modules.define('shri2017.imageViewer.EventManager', [
             });
         },
 
+        // обработчик pointer-событий
         _pointerEventHandler: function (event) {
             event.preventDefault();
 
+            // массивом id-шников удобно оперировать
             var ids = Object.keys(this._pointers);
             var elemOffset = this._calculateElementOffset(this._elem);
 
             if (event.type === 'pointerdown') {
+                // не обрабатываем 3 и более касания
                 if (ids.length > 1) {
                     return;
                 }
 
+                // при добавлении первого поинтера подписываемся на его движение и сохраняем его
                 if (ids.length === 0) {
                     this._addEventListeners('pointermove', this._elem, this._pointerMoveListener);
                     this._callback({
@@ -145,11 +160,14 @@ ym.modules.define('shri2017.imageViewer.EventManager', [
                     });
                     this._savePointer(event);
 
+                    // только для мышки подписываемся на выход за пределы элемента
+                    // на сенсорных девайсах почему-то нет проблемы с прослушкой move за пределами элемента
                     if (event.pointerType === 'mouse') {
                         this._addEventListeners('pointerout pointerover', this._elem, this._pointerOutListener);
                     }
                 }
 
+                // если добавился второй поинтер, просто вызываем коллбек и посханяем поинтер
                 if (ids.length === 1) {
                     this._callback({
                         type: EVENTS[event.type],
@@ -158,13 +176,15 @@ ym.modules.define('shri2017.imageViewer.EventManager', [
                     });
                     this._savePointer(event);
                 }
+                // обработка удалившегося поинтера
             } else {
+                // отписываемся от событий, если это был последний поинтер
                 if (ids.length === 1) {
                     this._removeEventListeners('pointermove', this._elem, this._pointerMoveListener);
 
                     if (event.pointerType === 'mouse') {
                         this._removeEventListeners('pointerout pointerover', this._elem, this._pointerOutListener);
-                        this._removeEventListeners('pointerup', document, this._pointerListener);
+                        this._removeEventListeners('pointerup', document.documentElement, this._pointerListener);
                     }
                 }
 
@@ -188,6 +208,7 @@ ym.modules.define('shri2017.imageViewer.EventManager', [
             }
         },
 
+        // todo: объединить с _pointerEventHandler
         _pointerMoveEventHandler: function (event) {
             event.preventDefault();
 
@@ -196,7 +217,7 @@ ym.modules.define('shri2017.imageViewer.EventManager', [
 
                 var ids = Object.keys(this._pointers);
                 var targetPoint;
-                var pointerType;
+                var pointerType; // тип указателя - touch, mouse...
                 var distance = 1;
                 var elemOffset = this._calculateElementOffset(this._elem);
 
@@ -226,17 +247,19 @@ ym.modules.define('shri2017.imageViewer.EventManager', [
             }
         },
 
+        // подписываемся или отписываемся от событий выхода за пределы элемента
         _pointerOutEventHandler: function (event) {
             if (event.type === 'pointerout') {
-                this._addEventListeners('pointermove', document, this._pointerMoveListener);
-                this._addEventListeners('pointerup', document, this._pointerOutListener);
-                this._addEventListeners('pointerup', document, this._pointerListener);
+                this._addEventListeners('pointermove', document.documentElement, this._pointerMoveListener);
+                this._addEventListeners('pointerup', document.documentElement, this._pointerOutListener);
+                this._addEventListeners('pointerup', document.documentElement, this._pointerListener);
             } else {
-                this._removeEventListeners('pointermove', document, this._pointerMoveListener);
-                this._removeEventListeners('pointerup', document, this._pointerOutListener);
+                this._removeEventListeners('pointermove', document.documentElement, this._pointerMoveListener);
+                this._removeEventListeners('pointerup', document.documentElement, this._pointerOutListener);
             }
         },
 
+        // обработчик колеса мыши или увеличения тачпада
         _wheelEventHandler: function (event) {
             event.preventDefault();
 
@@ -273,6 +296,7 @@ ym.modules.define('shri2017.imageViewer.EventManager', [
             };
         },
 
+        // сохраняет поинтер в хеш
         _savePointer: function (pointer) {
             this._pointers[pointer.pointerId] = {
                 clientX: pointer.clientX,
