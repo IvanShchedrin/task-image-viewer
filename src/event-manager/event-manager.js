@@ -149,7 +149,7 @@ ym.modules.define('shri2017.imageViewer.EventManager', [
 
                 // при добавлении первого поинтера подписываемся на его движение и сохраняем его
                 if (ids.length === 0) {
-                    this._addEventListeners('pointermove', this._elem, this._pointerMoveListener);
+                    this._addEventListeners('pointermove', document.documentElement, this._pointerMoveListener);
                     this._callback({
                         type: EVENTS[event.type],
                         targetPoint: {
@@ -158,6 +158,7 @@ ym.modules.define('shri2017.imageViewer.EventManager', [
                         },
                         distance: 1
                     });
+
                     this._savePointer(event);
 
                     // только для мышки подписываемся на выход за пределы элемента
@@ -180,7 +181,7 @@ ym.modules.define('shri2017.imageViewer.EventManager', [
             } else {
                 // отписываемся от событий, если это был последний поинтер
                 if (ids.length === 1) {
-                    this._removeEventListeners('pointermove', this._elem, this._pointerMoveListener);
+                    this._removeEventListeners('pointermove', document.documentElement, this._pointerMoveListener);
 
                     if (event.pointerType === 'mouse') {
                         this._removeEventListeners('pointerout pointerover', this._elem, this._pointerOutListener);

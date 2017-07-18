@@ -66,6 +66,7 @@ ym.modules.define('shri2017.imageViewer.GestureController', [
                 }
             }
 
+            // end onetouchzoom
             if (event.type === 'end' && this._oneTouchZoomPrev !== null) {
                 this._oneTouchZoomPrev = null;
             }
